@@ -1,45 +1,41 @@
 import 'package:flutter/material.dart';
-import 'exercise_page.dart';
+import '../models/workout_model.dart';
+import '../models/exercise_model.dart';
 
 class CapsulePage extends StatelessWidget {
-  final Map<String, dynamic> capsule;
+  final WorkoutModel workout;
 
-  const CapsulePage({super.key, required this.capsule});
+  const CapsulePage({super.key, required this.workout});
 
   @override
   Widget build(BuildContext context) {
-    final exercises = capsule['exercises'] as List;
-
     return Scaffold(
-      backgroundColor: const Color(0xff0a0a0f),
       appBar: AppBar(
-        title: Text(capsule['title']),
-        backgroundColor: Colors.black,
+        title: Text('Resumo do Treino: ${workout.name}'),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: exercises.length,
+        itemCount: workout.exercises.length,
         itemBuilder: (context, index) {
-          final exercise = exercises[index];
+          final e = workout.exercises[index];
           return Card(
-            color: const Color(0xff1b1b25),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(
-              title: Text(exercise['name'],
-                  style: const TextStyle(color: Colors.white)),
+              title: Text(e.name),
               subtitle: Text(
-                'Séries: ${exercise['series']} | Peso: ${exercise['weight']}kg | Descanso: ${exercise['rest']}s',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              trailing:
-                  const Icon(Icons.arrow_forward_ios, color: Colors.cyanAccent),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ExercisePage(exercise: exercise),
-                ),
+                  'Séries: ${e.sets} • Peso: ${e.weight}kg • Desc: ${e.restSeconds}s'),
+              trailing: IconButton(
+                icon: const Icon(Icons.play_circle_fill),
+                onPressed: () {
+                  if (e.executionLink.isNotEmpty) {
+                    // Tenta abrir o link externo
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content:
+                              Text('Abrindo execução: ${e.executionLink}')),
+                    );
+                  }
+                },
               ),
             ),
           );
