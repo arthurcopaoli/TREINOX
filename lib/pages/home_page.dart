@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/workout_model.dart';
-import '../models/exercise_model.dart';
 import 'exercise_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -21,106 +20,94 @@ class _HomePageState extends State<HomePage> {
     workoutBox = Hive.box<WorkoutModel>('workouts');
   }
 
-  // Função para adicionar novo treino com nome personalizado
-  void _addNewWorkout() {
-    String workoutName = '';
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Nome do Treino'),
-          content: TextField(
-            onChanged: (value) {
-              workoutName = value;
-            },
-            decoration:
-                const InputDecoration(hintText: "Digite o nome do treino"),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (workoutName.trim().isNotEmpty) {
-                  final newWorkout = WorkoutModel(
-                    id: const Uuid().v4(),
-                    name: workoutName,
-                    exercises: [],
-                  );
-                  workoutBox.add(newWorkout);
-                  setState(() {}); // Atualiza a lista na tela
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Salvar'),
-            ),
-          ],
-        );
-      },
+  void _addWorkout() {
+    final id = const Uuid().v4();
+    final workout = WorkoutModel(
+      id: id,
+      name: 'TREINOX', // Nome inicial futurista
+      exercises: [],
     );
+    workoutBox.put(id, workout);
+    setState(() {});
   }
 
-  // Deletar treino
-  void _deleteWorkout(int index) {
-    workoutBox.deleteAt(index);
+  void _editWorkout(WorkoutModel workout) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExercisePage(
+          workout: workout,
+          onSave: () async {
+            await workout.save();
+          },
+        ),
+      ),
+    ).then((_) => setState(() {}));
+  }
+
+  void _deleteWorkout(String id) {
+    workoutBox.delete(id);
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meus Treinos'),
-        centerTitle: true,
-      ),
-      body: ValueListenableBuilder(
-        valueListenable: workoutBox.listenable(),
-        builder: (context, Box<WorkoutModel> box, _) {
-          if (box.values.isEmpty) {
-            return const Center(child: Text('Nenhum treino criado'));
-          }
+    final workouts = workoutBox.values.toList();
 
-          return ListView.builder(
-            itemCount: box.length,
-            itemBuilder: (context, index) {
-              final workout = box.getAt(index);
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: 5,
-                child: ListTile(
-                  title: Text(workout!.name),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    onPressed: () => _deleteWorkout(index),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ExercisePage(
-                          workout: workout,
-                          onSave: () async {
-                            setState(() {}); // Corrigido: agora é Future<void>
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          );
-        },
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0A0D), // Fundo escuro futurista
+      appBar: AppBar(
+        title: const Text('TREINOX',
+            style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        backgroundColor: const Color(0xFF0A0A0D),
+        elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: _addWorkout,
+            icon: const Icon(Icons.add_circle_outline),
+            color: const Color(0xFF00E5FF),
+            iconSize: 32,
+          )
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addNewWorkout,
-        child: const Icon(Icons.add),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView.builder(
+          itemCount: workouts.length,
+          itemBuilder: (context, index) {
+            final w = workouts[index];
+            return GestureDetector(
+              onTap: () => _editWorkout(w),
+              child: Card(
+                color: const Color(0xFF1C1C1E),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                margin: const EdgeInsets.only(bottom: 16),
+                elevation: 4,
+                child: ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  title: Text(
+                    w.name,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
+                  subtitle: Text(
+                    '${w.exercises.length} exercícios',
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    color: Colors.redAccent,
+                    onPressed: () => _deleteWorkout(w.id),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
