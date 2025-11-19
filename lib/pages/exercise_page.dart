@@ -6,7 +6,7 @@ import '../models/exercise_model.dart';
 
 class ExercisePage extends StatefulWidget {
   final WorkoutModel workout;
-  final Future<void> Function() onSave;
+  final Future<void> Function() onSave; // <- Corrigido para Future
 
   const ExercisePage({super.key, required this.workout, required this.onSave});
 
@@ -25,7 +25,7 @@ class _ExercisePageState extends State<ExercisePage> {
 
   Future<void> _saveAndReturn() async {
     widget.workout.exercises = exercises;
-    await widget.onSave();
+    await widget.onSave(); // Agora é Future, sem erro
     Navigator.pop(context);
   }
 
@@ -35,50 +35,6 @@ class _ExercisePageState extends State<ExercisePage> {
       exercises.add(ExerciseModel(id: id, name: 'Novo exercício'));
     });
   }
-
-  // ------------------------------------------------------------
-  // RENOMEAR TREINO
-  // ------------------------------------------------------------
-  void _renameWorkout() async {
-    final controller = TextEditingController(text: widget.workout.name);
-
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1C1C1E),
-        title: const Text(
-          'Renomear treino',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(labelText: 'Novo nome'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar',
-                style: TextStyle(color: Colors.redAccent)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Salvar',
-                style: TextStyle(color: Color(0xFF00E5FF))),
-          ),
-        ],
-      ),
-    );
-
-    if (newName != null && newName.isNotEmpty) {
-      setState(() {
-        widget.workout.name = newName;
-      });
-      await widget.workout.save();
-    }
-  }
-
-  // ------------------------------------------------------------
 
   void _editExercise(int index) async {
     final e = exercises[index];
@@ -198,21 +154,8 @@ class _ExercisePageState extends State<ExercisePage> {
       backgroundColor: const Color(0xFF0A0A0D),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0A0D),
-
-        // ------------ RENOMEAR AO TOCAR NO TÍTULO ------------
-        title: GestureDetector(
-          onTap: _renameWorkout,
-          child: Text(
-            widget.workout.name,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-              letterSpacing: 1.2,
-            ),
-          ),
-        ),
-        // ------------------------------------------------------
-
+        title: Text(widget.workout.name,
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             onPressed: _addExercise,
@@ -262,10 +205,12 @@ class _ExercisePageState extends State<ExercisePage> {
                     if (s == 'delete') _deleteExercise(index);
                     if (s == 'open') _openLink(e.executionLink);
                   },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'edit', child: Text('Editar')),
-                    PopupMenuItem(value: 'delete', child: Text('Excluir')),
-                    PopupMenuItem(value: 'open', child: Text('Abrir execução')),
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(value: 'edit', child: Text('Editar')),
+                    const PopupMenuItem(
+                        value: 'delete', child: Text('Excluir')),
+                    const PopupMenuItem(
+                        value: 'open', child: Text('Abrir execução')),
                   ],
                 ),
                 onTap: () => _editExercise(index),
