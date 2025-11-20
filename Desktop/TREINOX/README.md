@@ -18,6 +18,8 @@ O TREINOX é um projeto Flutter que organiza treinos de forma prática, com:
    flutter doctor
 Abra o projeto:
 
+Importante: Certifique-se de estar na pasta TREINOX (versão final)
+
 bash
 Copy code
 cd ~/Downloads/TREINOX
