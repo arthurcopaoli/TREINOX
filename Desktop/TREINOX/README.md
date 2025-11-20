@@ -20,7 +20,7 @@ Abra o projeto:
 
 bash
 Copy code
-cd Desktop/TREINOX
+cd ~/Downloads/TREINOX
 Instale as dependências:
 
 bash
